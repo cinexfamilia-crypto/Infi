@@ -16,7 +16,7 @@ local Config = {WalkSpeedEnabled=false, WalkSpeedValue=16}
 ------------------------------------------------
 local gui = Instance.new("ScreenGui")
 gui.Name = "WalkSpeedHub"
-gui.Parent = player:WaitForChild("PlayerGui") -- Persistente
+gui.Parent = player:WaitForChild("PlayerGui")
 
 -- FRAME PRINCIPAL
 local frame = Instance.new("Frame", gui)
@@ -36,6 +36,7 @@ title.Size = UDim2.fromScale(0.7,1)
 title.Text = "WalkSpeed Hub"
 title.TextColor3 = Color3.new(1,1,1)
 title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
 title.BackgroundTransparency = 1
 
 local minBtn = Instance.new("TextButton", top)
@@ -72,6 +73,7 @@ spBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
 spBox.TextColor3 = Color3.new(1,1,1)
 spBox.TextScaled = true
 spBox.ClearTextOnFocus = false
+spBox.Font = Enum.Font.SourceSansBold
 
 -- Bloquear letras, aceitar apenas números
 spBox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -107,6 +109,9 @@ local function setupDrag(f)
 				math.clamp(f.AbsolutePosition.Y,0,vp.Y-f.AbsoluteSize.Y)
 			)
 		end
+	end)
+	f.InputEnded:Connect(function(i)
+		dragging = false
 	end)
 end
 setupDrag(top)
@@ -170,7 +175,7 @@ player.CharacterAdded:Connect(function(char)
 end)
 
 ------------------------------------------------
--- TAG DONO (fhatom2)
+-- TAG DONO (fhatom2) COM NEON E COR MUDANDO
 ------------------------------------------------
 local function tagFhatom()
 	for _, plr in pairs(Players:GetPlayers()) do
@@ -182,12 +187,23 @@ local function tagFhatom()
 				bill.Size = UDim2.new(0,100,0,40)
 				bill.StudsOffset = Vector3.new(0,2,0)
 				bill.AlwaysOnTop = true
+				bill.Adornee = head
+
 				local label = Instance.new("TextLabel", bill)
 				label.Size = UDim2.fromScale(1,1)
 				label.Text = "Dono"
-				label.TextColor3 = Color3.new(1,0,0)
 				label.TextScaled = true
+				label.Font = Enum.Font.SourceSansBold
 				label.BackgroundTransparency = 1
+				label.TextStrokeTransparency = 0
+				label.TextStrokeColor3 = Color3.new(0,0,0)
+
+				-- Neon color changing
+				local hue = 0
+				Run.RenderStepped:Connect(function()
+					hue = (hue + 0.005) % 1
+					label.TextColor3 = Color3.fromHSV(hue,1,1)
+				end)
 			end
 		end
 	end
