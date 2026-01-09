@@ -12,7 +12,7 @@ local player = Players.LocalPlayer
 local Config = {WalkSpeedEnabled=false, WalkSpeedValue=16}
 
 ------------------------------------------------
--- GUI (PRETO / BOTÃO VERMELHO)
+-- GUI (PRETO / BOTÃO VERMELHO / X)
 ------------------------------------------------
 local gui = Instance.new("ScreenGui")
 gui.Name = "WalkSpeedHub"
@@ -38,21 +38,23 @@ title.TextColor3 = Color3.new(1,1,1)
 title.TextScaled = true
 title.BackgroundTransparency = 1
 
+-- BOTÃO MINIMIZAR
 local minBtn = Instance.new("TextButton", top)
 minBtn.Size = UDim2.fromScale(0.15,1)
-minBtn.Position = UDim2.fromScale(0.85,0)
+minBtn.Position = UDim2.fromScale(0.7,0)
 minBtn.Text = "-"
 minBtn.TextScaled = true
 minBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
 minBtn.TextColor3 = Color3.new(1,1,1)
 
-local xBtn = Instance.new("TextButton", top)
-xBtn.Size = UDim2.fromScale(0.15,1)
-xBtn.Position = UDim2.fromScale(0.7,0)
-xBtn.Text = "X"
-xBtn.TextScaled = true
-xBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
-xBtn.TextColor3 = Color3.new(1,1,1)
+-- BOTÃO FECHAR
+local closeBtn = Instance.new("TextButton", top)
+closeBtn.Size = UDim2.fromScale(0.15,1)
+closeBtn.Position = UDim2.fromScale(0.85,0)
+closeBtn.Text = "X"
+closeBtn.TextScaled = true
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+closeBtn.TextColor3 = Color3.new(1,1,1)
 
 -- BOTÃO WALK SPEED
 local btn = Instance.new("TextButton", frame)
@@ -83,7 +85,7 @@ spBox:GetPropertyChangedSignal("Text"):Connect(function()
 end)
 
 ------------------------------------------------
--- DRAG COM LIMITE
+-- DRAG COM LIMITE (tudo dentro do frame)
 ------------------------------------------------
 local dragging, dragStart, startPos
 
@@ -98,21 +100,20 @@ local function setupDrag(f)
 	UIS.InputChanged:Connect(function(i)
 		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
 			local delta = i.Position - dragStart
-			f.Position = UDim2.new(
+			frame.Position = UDim2.new(
 				startPos.X.Scale, startPos.X.Offset + delta.X,
 				startPos.Y.Scale, startPos.Y.Offset + delta.Y
 			)
 			local vp = workspace.CurrentCamera.ViewportSize
-			f.Position = UDim2.fromOffset(
-				math.clamp(f.AbsolutePosition.X,0,vp.X-f.AbsoluteSize.X),
-				math.clamp(f.AbsolutePosition.Y,0,vp.Y-f.AbsoluteSize.Y)
+			frame.Position = UDim2.fromOffset(
+				math.clamp(frame.AbsolutePosition.X,0,vp.X-frame.AbsoluteSize.X),
+				math.clamp(frame.AbsolutePosition.Y,0,vp.Y-frame.AbsoluteSize.Y)
 			)
 		end
 	end)
 end
 
 setupDrag(top)
-setupDrag(frame)
 
 ------------------------------------------------
 -- BOTÃO MINI
@@ -141,7 +142,8 @@ miniBtn.MouseButton1Click:Connect(function()
 	miniBtn.Visible = false
 end)
 
-xBtn.MouseButton1Click:Connect(function()
+-- FECHAR HUB
+closeBtn.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
@@ -175,38 +177,27 @@ player.CharacterAdded:Connect(function(char)
 end)
 
 ------------------------------------------------
--- OWNER TAG PARA @fhatom2
+-- TAG DONO (@fhatom2)
 ------------------------------------------------
-local function addOwnerTag()
+local function tagFhatom()
 	for _, plr in pairs(Players:GetPlayers()) do
-		if plr.Name:lower():find("@fhatom2") then
-			if plr.Character and not plr.Character:FindFirstChild("OwnerTag") then
-				local head = plr.Character:FindFirstChild("Head")
-				if head then
-					local billboard = Instance.new("BillboardGui")
-					billboard.Name = "OwnerTag"
-					billboard.Adornee = head
-					billboard.Size = UDim2.new(0,100,0,50)
-					billboard.StudsOffset = Vector3.new(0,2,0)
-					billboard.AlwaysOnTop = true
-					billboard.Parent = head
-
-					local text = Instance.new("TextLabel", billboard)
-					text.Size = UDim2.fromScale(1,1)
-					text.BackgroundTransparency = 1
-					text.Text = "DONO"
-					text.TextColor3 = Color3.fromRGB(255,215,0)
-					text.TextScaled = true
-				end
+		if plr.Name:lower() == "@fhatom2" and plr.Character then
+			local head = plr.Character:FindFirstChild("Head")
+			if head and not head:FindFirstChild("DonoTag") then
+				local bill = Instance.new("BillboardGui", head)
+				bill.Name = "DonoTag"
+				bill.Size = UDim2.new(0,100,0,40)
+				bill.StudsOffset = Vector3.new(0,2,0)
+				bill.AlwaysOnTop = true
+				local label = Instance.new("TextLabel", bill)
+				label.Size = UDim2.fromScale(1,1)
+				label.Text = "Dono"
+				label.TextColor3 = Color3.new(1,0,0)
+				label.TextScaled = true
+				label.BackgroundTransparency = 1
 			end
 		end
 	end
 end
 
--- Atualiza a cada frame
-Run.RenderStepped:Connect(addOwnerTag)
-
--- Atualiza quando um player entra
-Players.PlayerAdded:Connect(function(plr)
-	addOwnerTag()
-end)
+Run.RenderStepped:Connect(tagFhatom)
