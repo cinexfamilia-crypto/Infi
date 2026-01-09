@@ -5,48 +5,53 @@ local Players = game:GetService("Players")
 local Run = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
-local cam = workspace.CurrentCamera
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
-local hrp = char:WaitForChild("HumanoidRootPart")
 
 ------------------------------------------------
 -- CONFIG
 ------------------------------------------------
-local Config = {InfiniteJump=false}
+local Config = {WalkSpeedEnabled=false, WalkSpeedValue=16}
 
 ------------------------------------------------
--- GUI (CINZA TRANSPARENTE / BOTÃO VERDE)
+-- GUI (PRETO / BOTÃO VERMELHO)
 ------------------------------------------------
 local gui = Instance.new("ScreenGui", player.PlayerGui)
-gui.Name = "InfiniteJumpHub"
+gui.Name = "WalkSpeedHub"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromScale(0.25, 0.15)
+frame.Size = UDim2.fromScale(0.25, 0.18)
 frame.Position = UDim2.fromScale(0.05, 0.3)
-frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
-frame.BackgroundTransparency = 0.5
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 frame.BorderSizePixel = 0
 
 local top = Instance.new("Frame", frame)
 top.Size = UDim2.fromScale(1,0.2)
-top.BackgroundColor3 = Color3.fromRGB(80,80,80)
+top.BackgroundColor3 = Color3.fromRGB(50,50,50)
 top.BorderSizePixel = 0
 
 local title = Instance.new("TextLabel", top)
 title.Size = UDim2.fromScale(1,1)
-title.Text = "Pulo Infinito"
+title.Text = "WalkSpeed Hub"
 title.TextColor3 = Color3.new(1,1,1)
 title.TextScaled = true
 title.BackgroundTransparency = 1
 
 local btn = Instance.new("TextButton", frame)
-btn.Size = UDim2.fromScale(0.9,0.6)
+btn.Size = UDim2.fromScale(0.4,0.3)
 btn.Position = UDim2.fromScale(0.05,0.25)
 btn.Text = "OFF"
 btn.TextColor3 = Color3.new(1,1,1)
-btn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+btn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 btn.TextScaled = true
+
+local spBox = Instance.new("TextBox", frame)
+spBox.Size = UDim2.fromScale(0.5,0.3)
+spBox.Position = UDim2.fromScale(0.5,0.25)
+spBox.PlaceholderText = "Velocidade"
+spBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
+spBox.TextColor3 = Color3.new(1,1,1)
+spBox.TextScaled = true
 
 ------------------------------------------------
 -- DRAG COM LIMITE
@@ -67,7 +72,7 @@ UIS.InputChanged:Connect(function(i)
 			startPos.X.Scale, startPos.X.Offset + delta.X,
 			startPos.Y.Scale, startPos.Y.Offset + delta.Y
 		)
-		local vp = cam.ViewportSize
+		local vp = workspace.CurrentCamera.ViewportSize
 		frame.Position = UDim2.fromOffset(
 			math.clamp(frame.AbsolutePosition.X,0,vp.X-frame.AbsoluteSize.X),
 			math.clamp(frame.AbsolutePosition.Y,0,vp.Y-frame.AbsoluteSize.Y)
@@ -78,29 +83,16 @@ end)
 UIS.InputEnded:Connect(function() dragging = false end)
 
 ------------------------------------------------
--- INFINITE JUMP
+-- LOGICA WALK SPEED
 ------------------------------------------------
 btn.MouseButton1Click:Connect(function()
-	Config.InfiniteJump = not Config.InfiniteJump
-	btn.Text = Config.InfiniteJump and "ON" or "OFF"
+	Config.WalkSpeedEnabled = not Config.WalkSpeedEnabled
+	btn.Text = Config.WalkSpeedEnabled and "ON" or "OFF"
+	Config.WalkSpeedValue = tonumber(spBox.Text) or Config.WalkSpeedValue
 end)
-
-UIS.JumpRequest:Connect(function()
-	if Config.InfiniteJump then
-		hum:ChangeState(Enum.HumanoidStateType.Jumping)
-	end
-end)
-
-------------------------------------------------
--- CAMERA FOLLOW (CORRIGIDO)
-------------------------------------------------
-local camOffset = cam.CFrame.Position - hrp.Position
 
 Run.RenderStepped:Connect(function()
-	if char and hrp then
-		-- Mantém o ângulo horizontal da câmera
-		local camPos = hrp.Position + camOffset
-		local lookVector = cam.CFrame.LookVector
-		cam.CFrame = CFrame.new(camPos, camPos + lookVector)
+	if Config.WalkSpeedEnabled and hum then
+		hum.WalkSpeed = Config.WalkSpeedValue
 	end
 end)
