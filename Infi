@@ -1,0 +1,106 @@
+------------------------------------------------
+-- SERVICES / VARS
+------------------------------------------------
+local Players = game:GetService("Players")
+local Run = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local cam = workspace.CurrentCamera
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+------------------------------------------------
+-- CONFIG
+------------------------------------------------
+local Config = {InfiniteJump=false}
+
+------------------------------------------------
+-- GUI (CINZA TRANSPARENTE / BOTÃO VERDE)
+------------------------------------------------
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "InfiniteJumpHub"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.fromScale(0.25, 0.15)
+frame.Position = UDim2.fromScale(0.05, 0.3)
+frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+frame.BackgroundTransparency = 0.5
+frame.BorderSizePixel = 0
+
+local top = Instance.new("Frame", frame)
+top.Size = UDim2.fromScale(1,0.2)
+top.BackgroundColor3 = Color3.fromRGB(80,80,80)
+top.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", top)
+title.Size = UDim2.fromScale(1,1)
+title.Text = "Pulo Infinito"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextScaled = true
+title.BackgroundTransparency = 1
+
+local btn = Instance.new("TextButton", frame)
+btn.Size = UDim2.fromScale(0.9,0.6)
+btn.Position = UDim2.fromScale(0.05,0.25)
+btn.Text = "OFF"
+btn.TextColor3 = Color3.new(1,1,1)
+btn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+btn.TextScaled = true
+
+------------------------------------------------
+-- DRAG COM LIMITE
+------------------------------------------------
+local dragging, dragStart, startPos
+top.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = i.Position
+		startPos = frame.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(i)
+	if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+		local delta = i.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+		local vp = cam.ViewportSize
+		frame.Position = UDim2.fromOffset(
+			math.clamp(frame.AbsolutePosition.X,0,vp.X-frame.AbsoluteSize.X),
+			math.clamp(frame.AbsolutePosition.Y,0,vp.Y-frame.AbsoluteSize.Y)
+		)
+	end
+end)
+
+UIS.InputEnded:Connect(function() dragging = false end)
+
+------------------------------------------------
+-- INFINITE JUMP
+------------------------------------------------
+btn.MouseButton1Click:Connect(function()
+	Config.InfiniteJump = not Config.InfiniteJump
+	btn.Text = Config.InfiniteJump and "ON" or "OFF"
+end)
+
+UIS.JumpRequest:Connect(function()
+	if Config.InfiniteJump then
+		hum:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+------------------------------------------------
+-- CAMERA FOLLOW (CORRIGIDO)
+------------------------------------------------
+local camOffset = cam.CFrame.Position - hrp.Position
+
+Run.RenderStepped:Connect(function()
+	if char and hrp then
+		-- Mantém o ângulo horizontal da câmera
+		local camPos = hrp.Position + camOffset
+		local lookVector = cam.CFrame.LookVector
+		cam.CFrame = CFrame.new(camPos, camPos + lookVector)
+	end
+end)
