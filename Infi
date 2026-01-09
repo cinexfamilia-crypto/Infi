@@ -9,53 +9,56 @@ local player = Players.LocalPlayer
 ------------------------------------------------
 -- CONFIG
 ------------------------------------------------
-local Config = {WalkSpeedEnabled=false, WalkSpeedValue=16}
+local Config = {
+	WalkSpeedEnabled = false,
+	WalkSpeedValue = 16,
+	Language = "EN"
+}
 
 ------------------------------------------------
--- GUI (PRETO / BOTÃO VERMELHO)
+-- GUI BASE
 ------------------------------------------------
-local gui = Instance.new("ScreenGui")
-gui.Name = "WalkSpeedHub"
-gui.Parent = player:WaitForChild("PlayerGui")
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "WalkMasterHub"
 
--- FRAME PRINCIPAL
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.fromScale(0.25,0.18)
 frame.Position = UDim2.fromScale(0.05,0.3)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 frame.BorderSizePixel = 0
 
--- TOPO
+-- TOP
 local top = Instance.new("Frame", frame)
 top.Size = UDim2.fromScale(1,0.2)
 top.BackgroundColor3 = Color3.fromRGB(50,50,50)
 top.BorderSizePixel = 0
 
 local title = Instance.new("TextLabel", top)
-title.Size = UDim2.fromScale(0.7,1)
-title.Text = "WalkSpeed Hub"
+title.Size = UDim2.fromScale(0.85,1)
+title.Text = "WalkMaster ~ Speed"
 title.TextColor3 = Color3.new(1,1,1)
 title.TextScaled = true
-title.Font = Enum.Font.SourceSansBold
 title.BackgroundTransparency = 1
 
+-- MINIMIZE
 local minBtn = Instance.new("TextButton", top)
-minBtn.Size = UDim2.fromScale(0.15,1)
-minBtn.Position = UDim2.fromScale(0.7,0)
+minBtn.Size = UDim2.fromScale(0.075,1)
+minBtn.Position = UDim2.fromScale(0.85,0)
 minBtn.Text = "-"
 minBtn.TextScaled = true
 minBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
 minBtn.TextColor3 = Color3.new(1,1,1)
 
+-- CLOSE
 local closeBtn = Instance.new("TextButton", top)
-closeBtn.Size = UDim2.fromScale(0.15,1)
-closeBtn.Position = UDim2.fromScale(0.85,0)
+closeBtn.Size = UDim2.fromScale(0.075,1)
+closeBtn.Position = UDim2.fromScale(0.925,0)
 closeBtn.Text = "X"
 closeBtn.TextScaled = true
-closeBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 closeBtn.TextColor3 = Color3.new(1,1,1)
 
--- BOTÃO WALK SPEED
+-- WALK SPEED
 local btn = Instance.new("TextButton", frame)
 btn.Size = UDim2.fromScale(0.4,0.3)
 btn.Position = UDim2.fromScale(0.05,0.25)
@@ -64,7 +67,6 @@ btn.TextColor3 = Color3.new(1,1,1)
 btn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 btn.TextScaled = true
 
--- CAIXA DE VELOCIDADE
 local spBox = Instance.new("TextBox", frame)
 spBox.Size = UDim2.fromScale(0.5,0.3)
 spBox.Position = UDim2.fromScale(0.5,0.25)
@@ -73,20 +75,8 @@ spBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
 spBox.TextColor3 = Color3.new(1,1,1)
 spBox.TextScaled = true
 spBox.ClearTextOnFocus = false
-spBox.Font = Enum.Font.SourceSansBold
 
--- Bloquear letras, aceitar apenas números
-spBox:GetPropertyChangedSignal("Text"):Connect(function()
-	local t = spBox.Text
-	local clean = t:gsub("%D","")
-	if clean == "" then clean = "0" end
-	spBox.Text = clean
-	spBox.TextColor3 = Color3.new(1,1,1)
-end)
-
-------------------------------------------------
--- DRAG COM LIMITE
-------------------------------------------------
+-- DRAG UNIFICADO
 local dragging, dragStart, startPos
 local function setupDrag(f)
 	f.InputBegan:Connect(function(i)
@@ -110,16 +100,11 @@ local function setupDrag(f)
 			)
 		end
 	end)
-	f.InputEnded:Connect(function(i)
-		dragging = false
-	end)
 end
 setupDrag(top)
 setupDrag(frame)
 
-------------------------------------------------
 -- MINI BUTTON
-------------------------------------------------
 local minimized = false
 local miniBtn = Instance.new("TextButton", gui)
 miniBtn.Size = UDim2.fromOffset(30,30)
@@ -136,7 +121,6 @@ minBtn.MouseButton1Click:Connect(function()
 	frame.Visible = not minimized
 	miniBtn.Visible = minimized
 end)
-
 miniBtn.MouseButton1Click:Connect(function()
 	minimized = false
 	frame.Visible = true
@@ -147,66 +131,73 @@ closeBtn.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
-------------------------------------------------
--- LOGICA WALK SPEED
-------------------------------------------------
+-- WALK SPEED LOGIC
 btn.MouseButton1Click:Connect(function()
 	Config.WalkSpeedEnabled = not Config.WalkSpeedEnabled
 	btn.Text = Config.WalkSpeedEnabled and "ON" or "OFF"
 	Config.WalkSpeedValue = tonumber(spBox.Text) or Config.WalkSpeedValue
 end)
 
-local function updateWalkSpeed(humanoid)
+-- Garantir só números
+spBox:GetPropertyChangedSignal("Text"):Connect(function()
+	local clean = spBox.Text:gsub("%D","")
+	if clean == "" then clean = "16" end
+	spBox.Text = clean
+	spBox.TextColor3 = Color3.new(1,1,1)
+end)
+
+-- UPDATE HUMANOID
+local function updateHumanoid(hum)
 	Run.RenderStepped:Connect(function()
-		if Config.WalkSpeedEnabled and humanoid then
-			humanoid.WalkSpeed = Config.WalkSpeedValue
+		if Config.WalkSpeedEnabled and hum then
+			hum.WalkSpeed = Config.WalkSpeedValue
 		end
 	end)
 end
-
 if player.Character then
 	local hum = player.Character:WaitForChild("Humanoid")
-	updateWalkSpeed(hum)
+	updateHumanoid(hum)
 end
-
 player.CharacterAdded:Connect(function(char)
 	local hum = char:WaitForChild("Humanoid")
-	updateWalkSpeed(hum)
+	updateHumanoid(hum)
 end)
 
 ------------------------------------------------
--- TAG DONO (fhatom2) COM NEON E COR MUDANDO
+-- TAG DONO (para player "fhatom2")
 ------------------------------------------------
-local function tagFhatom()
-	for _, plr in pairs(Players:GetPlayers()) do
-		if plr.Name:lower() == "fhatom2" and plr.Character then
-			local head = plr.Character:FindFirstChild("Head")
-			if head and not head:FindFirstChild("DonoTag") then
-				local bill = Instance.new("BillboardGui", head)
-				bill.Name = "DonoTag"
-				bill.Size = UDim2.new(0,100,0,40)
-				bill.StudsOffset = Vector3.new(0,2,0)
-				bill.AlwaysOnTop = true
-				bill.Adornee = head
+local function createOwnerTag(plr)
+	local head = plr.Character and plr.Character:FindFirstChild("Head")
+	if not head then return end
+	local billboard = Instance.new("BillboardGui", head)
+	billboard.Size = UDim2.new(0,100,0,30)
+	billboard.Adornee = head
+	billboard.AlwaysOnTop = true
 
-				local label = Instance.new("TextLabel", bill)
-				label.Size = UDim2.fromScale(1,1)
-				label.Text = "Dono"
-				label.TextScaled = true
-				label.Font = Enum.Font.SourceSansBold
-				label.BackgroundTransparency = 1
-				label.TextStrokeTransparency = 0
-				label.TextStrokeColor3 = Color3.new(0,0,0)
+	local label = Instance.new("TextLabel", billboard)
+	label.Size = UDim2.fromScale(1,1)
+	label.Text = "DONO"
+	label.Font = Enum.Font.CartoonBold
+	label.TextScaled = true
+	label.TextColor3 = Color3.fromHSV(0,1,1)
+	label.BackgroundTransparency = 1
 
-				-- Neon color changing
-				local hue = 0
-				Run.RenderStepped:Connect(function()
-					hue = (hue + 0.005) % 1
-					label.TextColor3 = Color3.fromHSV(hue,1,1)
-				end)
-			end
-		end
-	end
+	-- Cor animada
+	Run.RenderStepped:Connect(function()
+		local h,s,v = tick()%5/5,1,1
+		label.TextColor3 = Color3.fromHSV(h,s,v)
+	end)
 end
 
-Run.RenderStepped:Connect(tagFhatom)
+for _,plr in pairs(Players:GetPlayers()) do
+	if plr.Name:lower() == "fhatom2" then
+		createOwnerTag(plr)
+	end
+end
+Players.PlayerAdded:Connect(function(plr)
+	if plr.Name:lower() == "fhatom2" then
+		plr.CharacterAdded:Connect(function()
+			createOwnerTag(plr)
+		end)
+	end
+end)
