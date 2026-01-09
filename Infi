@@ -5,8 +5,6 @@ local Players = game:GetService("Players")
 local Run = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local hum = char:WaitForChild("Humanoid")
 
 ------------------------------------------------
 -- CONFIG
@@ -16,12 +14,13 @@ local Config = {WalkSpeedEnabled=false, WalkSpeedValue=16}
 ------------------------------------------------
 -- GUI (PRETO / BOTÃO VERMELHO)
 ------------------------------------------------
-local gui = Instance.new("ScreenGui", player.PlayerGui)
+local gui = Instance.new("ScreenGui")
 gui.Name = "WalkSpeedHub"
+gui.Parent = player:WaitForChild("PlayerGui") -- Persistente
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromScale(0.25, 0.18)
-frame.Position = UDim2.fromScale(0.05, 0.3)
+frame.Size = UDim2.fromScale(0.25,0.18)
+frame.Position = UDim2.fromScale(0.05,0.3)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 frame.BorderSizePixel = 0
 
@@ -31,11 +30,19 @@ top.BackgroundColor3 = Color3.fromRGB(50,50,50)
 top.BorderSizePixel = 0
 
 local title = Instance.new("TextLabel", top)
-title.Size = UDim2.fromScale(1,1)
+title.Size = UDim2.fromScale(0.85,1)
 title.Text = "WalkSpeed Hub"
 title.TextColor3 = Color3.new(1,1,1)
 title.TextScaled = true
 title.BackgroundTransparency = 1
+
+local minBtn = Instance.new("TextButton", top)
+minBtn.Size = UDim2.fromScale(0.15,1)
+minBtn.Position = UDim2.fromScale(0.85,0)
+minBtn.Text = "-"
+minBtn.TextScaled = true
+minBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+minBtn.TextColor3 = Color3.new(1,1,1)
 
 local btn = Instance.new("TextButton", frame)
 btn.Size = UDim2.fromScale(0.4,0.3)
@@ -83,7 +90,7 @@ end)
 UIS.InputEnded:Connect(function() dragging = false end)
 
 ------------------------------------------------
--- LOGICA WALK SPEED
+-- LOGICA WALK SPEED (PERSISTENTE)
 ------------------------------------------------
 btn.MouseButton1Click:Connect(function()
 	Config.WalkSpeedEnabled = not Config.WalkSpeedEnabled
@@ -91,8 +98,47 @@ btn.MouseButton1Click:Connect(function()
 	Config.WalkSpeedValue = tonumber(spBox.Text) or Config.WalkSpeedValue
 end)
 
-Run.RenderStepped:Connect(function()
-	if Config.WalkSpeedEnabled and hum then
-		hum.WalkSpeed = Config.WalkSpeedValue
-	end
+local function updateWalkSpeed(humanoid)
+	Run.RenderStepped:Connect(function()
+		if Config.WalkSpeedEnabled and humanoid then
+			humanoid.WalkSpeed = Config.WalkSpeedValue
+		end
+	end)
+end
+
+-- Inicial
+if player.Character then
+	local hum = player.Character:WaitForChild("Humanoid")
+	updateWalkSpeed(hum)
+end
+
+-- Reaplica se morrer e spawnar
+player.CharacterAdded:Connect(function(char)
+	local hum = char:WaitForChild("Humanoid")
+	updateWalkSpeed(hum)
+end)
+
+------------------------------------------------
+-- MINIMIZAR / MAXIMIZAR
+------------------------------------------------
+local minimized = false
+local miniBtn = Instance.new("TextButton", gui)
+miniBtn.Size = UDim2.fromOffset(30,30) -- botão pequeno
+miniBtn.Position = UDim2.fromScale(0.05,0.3)
+miniBtn.Text = "+"
+miniBtn.TextScaled = true
+miniBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+miniBtn.TextColor3 = Color3.new(1,1,1)
+miniBtn.Visible = false
+
+minBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	frame.Visible = not minimized
+	miniBtn.Visible = minimized
+end)
+
+miniBtn.MouseButton1Click:Connect(function()
+	minimized = false
+	frame.Visible = true
+	miniBtn.Visible = false
 end)
