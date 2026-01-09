@@ -2,162 +2,73 @@
 -- SERVICES / VARS
 ------------------------------------------------
 local Players = game:GetService("Players")
-local Run = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 ------------------------------------------------
--- CONFIG
+-- GUI BASE (HUB EVO V2.0)
 ------------------------------------------------
-local Config = {WalkSpeedEnabled=false, WalkSpeedValue=16}
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "HubEvoV2"
 
-------------------------------------------------
--- GUI (PRETO / BOTÃO VERMELHO)
-------------------------------------------------
-local gui = Instance.new("ScreenGui")
-gui.Name = "WalkSpeedHub"
-gui.Parent = player:WaitForChild("PlayerGui") -- Persistente
-
--- FRAME PRINCIPAL
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromScale(0.25,0.18)
-frame.Position = UDim2.fromScale(0.05,0.3)
+frame.Size = UDim2.fromScale(0.32,0.5)
+frame.Position = UDim2.fromScale(0.05,0.25)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 frame.BorderSizePixel = 0
 
--- TOPO
 local top = Instance.new("Frame", frame)
-top.Size = UDim2.fromScale(1,0.2)
-top.BackgroundColor3 = Color3.fromRGB(50,50,50)
+top.Size = UDim2.fromScale(1,0.12)
+top.BackgroundColor3 = Color3.fromRGB(180,0,0)
 top.BorderSizePixel = 0
 
 local title = Instance.new("TextLabel", top)
-title.Size = UDim2.fromScale(0.85,1)
-title.Text = "WalkSpeed Hub"
-title.TextColor3 = Color3.new(1,1,1)
+title.Size = UDim2.fromScale(0.7,1)
+title.Text = "HUB EVO V2.0"
 title.TextScaled = true
+title.TextColor3 = Color3.new(1,1,1)
 title.BackgroundTransparency = 1
 
-local minBtn = Instance.new("TextButton", top)
-minBtn.Size = UDim2.fromScale(0.15,1)
-minBtn.Position = UDim2.fromScale(0.85,0)
-minBtn.Text = "-"
-minBtn.TextScaled = true
-minBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
-minBtn.TextColor3 = Color3.new(1,1,1)
+------------------------------------------------
+-- BOTÃO FECHAR HUB
+------------------------------------------------
+local closeBtn = Instance.new("TextButton", top)
+closeBtn.Size = UDim2.fromScale(0.15,1)
+closeBtn.Position = UDim2.fromScale(0.85,0)
+closeBtn.Text = "X"
+closeBtn.TextScaled = true
+closeBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+closeBtn.TextColor3 = Color3.new(1,1,1)
 
--- BOTÃO WALK SPEED
-local btn = Instance.new("TextButton", frame)
-btn.Size = UDim2.fromScale(0.4,0.3)
-btn.Position = UDim2.fromScale(0.05,0.25)
-btn.Text = "OFF"
-btn.TextColor3 = Color3.new(1,1,1)
-btn.BackgroundColor3 = Color3.fromRGB(200,0,0)
-btn.TextScaled = true
-
--- CAIXA DE VELOCIDADE
-local spBox = Instance.new("TextBox", frame)
-spBox.Size = UDim2.fromScale(0.5,0.3)
-spBox.Position = UDim2.fromScale(0.5,0.25)
-spBox.Text = "16"
-spBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
-spBox.TextColor3 = Color3.new(1,1,1)
-spBox.TextScaled = true
-spBox.ClearTextOnFocus = false
-
--- Bloquear letras, aceitar apenas números
-spBox:GetPropertyChangedSignal("Text"):Connect(function()
-	local t = spBox.Text
-	local clean = t:gsub("%D","") -- remove tudo que não for número
-	if clean == "" then clean = "0" end
-	spBox.Text = clean
-	spBox.TextColor3 = Color3.new(1,1,1) -- sempre branco
+closeBtn.MouseButton1Click:Connect(function()
+	gui:Destroy() -- destrói toda a GUI
 end)
 
 ------------------------------------------------
 -- DRAG COM LIMITE
 ------------------------------------------------
 local dragging, dragStart, startPos
-
-local function setupDrag(f)
-	f.InputBegan:Connect(function(i)
-		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = i.Position
-			startPos = f.Position
-		end
-	end)
-	UIS.InputChanged:Connect(function(i)
-		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
-			local delta = i.Position - dragStart
-			f.Position = UDim2.new(
-				startPos.X.Scale, startPos.X.Offset + delta.X,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y
-			)
-			local vp = workspace.CurrentCamera.ViewportSize
-			f.Position = UDim2.fromOffset(
-				math.clamp(f.AbsolutePosition.X,0,vp.X-f.AbsoluteSize.X),
-				math.clamp(f.AbsolutePosition.Y,0,vp.Y-f.AbsoluteSize.Y)
-			)
-		end
-	end)
-end
-
-setupDrag(top)
-setupDrag(frame)
-
-------------------------------------------------
--- BOTÃO MINI
-------------------------------------------------
-local minimized = false
-local miniBtn = Instance.new("TextButton", gui)
-miniBtn.Size = UDim2.fromOffset(30,30)
-miniBtn.Position = UDim2.fromScale(0.05,0.3)
-miniBtn.Text = "+"
-miniBtn.TextScaled = true
-miniBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
-miniBtn.TextColor3 = Color3.new(1,1,1)
-miniBtn.Visible = false
-
-setupDrag(miniBtn)
-
-minBtn.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	frame.Visible = not minimized
-	miniBtn.Visible = minimized
+top.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = i.Position
+		startPos = frame.Position
+	end
 end)
 
-miniBtn.MouseButton1Click:Connect(function()
-	minimized = false
-	frame.Visible = true
-	miniBtn.Visible = false
+UIS.InputChanged:Connect(function(i)
+	if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+		local delta = i.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+		local vp = workspace.CurrentCamera.ViewportSize
+		frame.Position = UDim2.fromOffset(
+			math.clamp(frame.AbsolutePosition.X, 0, vp.X - frame.AbsoluteSize.X),
+			math.clamp(frame.AbsolutePosition.Y, 0, vp.Y - frame.AbsoluteSize.Y)
+		)
+	end
 end)
 
-------------------------------------------------
--- LOGICA WALK SPEED
-------------------------------------------------
-btn.MouseButton1Click:Connect(function()
-	Config.WalkSpeedEnabled = not Config.WalkSpeedEnabled
-	btn.Text = Config.WalkSpeedEnabled and "ON" or "OFF"
-	Config.WalkSpeedValue = tonumber(spBox.Text) or Config.WalkSpeedValue
-end)
-
-local function updateWalkSpeed(humanoid)
-	Run.RenderStepped:Connect(function()
-		if Config.WalkSpeedEnabled and humanoid then
-			humanoid.WalkSpeed = Config.WalkSpeedValue
-		end
-	end)
-end
-
--- Inicial
-if player.Character then
-	local hum = player.Character:WaitForChild("Humanoid")
-	updateWalkSpeed(hum)
-end
-
--- Persistência após respawn
-player.CharacterAdded:Connect(function(char)
-	local hum = char:WaitForChild("Humanoid")
-	updateWalkSpeed(hum)
-end)
+UIS.InputEnded:Connect(function() dragging = false end)
