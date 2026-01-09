@@ -5,14 +5,14 @@ local Players = game:GetService("Players")
 local Run = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
+local cam = workspace.CurrentCamera
 
 ------------------------------------------------
 -- CONFIG
 ------------------------------------------------
 local Config = {
 	WalkSpeedEnabled = false,
-	WalkSpeedValue = 16,
-	Language = "EN"
+	WalkSpeedValue = 16
 }
 
 ------------------------------------------------
@@ -21,13 +21,14 @@ local Config = {
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "WalkMasterHub"
 
+-- FRAME PRINCIPAL
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.fromScale(0.25,0.18)
 frame.Position = UDim2.fromScale(0.05,0.3)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 frame.BorderSizePixel = 0
 
--- TOP
+-- TOPO
 local top = Instance.new("Frame", frame)
 top.Size = UDim2.fromScale(1,0.2)
 top.BackgroundColor3 = Color3.fromRGB(50,50,50)
@@ -58,7 +59,7 @@ closeBtn.TextScaled = true
 closeBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 closeBtn.TextColor3 = Color3.new(1,1,1)
 
--- WALK SPEED
+-- BOTÃO WALK SPEED
 local btn = Instance.new("TextButton", frame)
 btn.Size = UDim2.fromScale(0.4,0.3)
 btn.Position = UDim2.fromScale(0.05,0.25)
@@ -67,6 +68,7 @@ btn.TextColor3 = Color3.new(1,1,1)
 btn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 btn.TextScaled = true
 
+-- CAIXA DE VELOCIDADE
 local spBox = Instance.new("TextBox", frame)
 spBox.Size = UDim2.fromScale(0.5,0.3)
 spBox.Position = UDim2.fromScale(0.5,0.25)
@@ -76,7 +78,18 @@ spBox.TextColor3 = Color3.new(1,1,1)
 spBox.TextScaled = true
 spBox.ClearTextOnFocus = false
 
--- DRAG UNIFICADO
+-- Bloquear letras, aceitar apenas números
+spBox:GetPropertyChangedSignal("Text"):Connect(function()
+	local t = spBox.Text
+	local clean = t:gsub("%D","") 
+	if clean == "" then clean = "16" end
+	spBox.Text = clean
+	spBox.TextColor3 = Color3.new(1,1,1)
+end)
+
+------------------------------------------------
+-- DRAG
+------------------------------------------------
 local dragging, dragStart, startPos
 local function setupDrag(f)
 	f.InputBegan:Connect(function(i)
@@ -100,11 +113,14 @@ local function setupDrag(f)
 			)
 		end
 	end)
+	f.InputEnded:Connect(function() dragging = false end)
 end
 setupDrag(top)
 setupDrag(frame)
 
+------------------------------------------------
 -- MINI BUTTON
+------------------------------------------------
 local minimized = false
 local miniBtn = Instance.new("TextButton", gui)
 miniBtn.Size = UDim2.fromOffset(30,30)
@@ -131,40 +147,34 @@ closeBtn.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
+------------------------------------------------
 -- WALK SPEED LOGIC
+------------------------------------------------
 btn.MouseButton1Click:Connect(function()
 	Config.WalkSpeedEnabled = not Config.WalkSpeedEnabled
 	btn.Text = Config.WalkSpeedEnabled and "ON" or "OFF"
 	Config.WalkSpeedValue = tonumber(spBox.Text) or Config.WalkSpeedValue
 end)
 
--- Garantir só números
-spBox:GetPropertyChangedSignal("Text"):Connect(function()
-	local clean = spBox.Text:gsub("%D","")
-	if clean == "" then clean = "16" end
-	spBox.Text = clean
-	spBox.TextColor3 = Color3.new(1,1,1)
-end)
-
--- UPDATE HUMANOID
-local function updateHumanoid(hum)
+local function updateWalkSpeed(humanoid)
 	Run.RenderStepped:Connect(function()
-		if Config.WalkSpeedEnabled and hum then
-			hum.WalkSpeed = Config.WalkSpeedValue
+		if Config.WalkSpeedEnabled and humanoid then
+			humanoid.WalkSpeed = Config.WalkSpeedValue
 		end
 	end)
 end
+
 if player.Character then
 	local hum = player.Character:WaitForChild("Humanoid")
-	updateHumanoid(hum)
+	updateWalkSpeed(hum)
 end
 player.CharacterAdded:Connect(function(char)
 	local hum = char:WaitForChild("Humanoid")
-	updateHumanoid(hum)
+	updateWalkSpeed(hum)
 end)
 
 ------------------------------------------------
--- TAG DONO (para player "fhatom2")
+-- TAG DONO
 ------------------------------------------------
 local function createOwnerTag(plr)
 	local head = plr.Character and plr.Character:FindFirstChild("Head")
@@ -182,7 +192,6 @@ local function createOwnerTag(plr)
 	label.TextColor3 = Color3.fromHSV(0,1,1)
 	label.BackgroundTransparency = 1
 
-	-- Cor animada
 	Run.RenderStepped:Connect(function()
 		local h,s,v = tick()%5/5,1,1
 		label.TextColor3 = Color3.fromHSV(h,s,v)
