@@ -1,112 +1,161 @@
--- HUB DE ESTATÍSTICAS (SEM IA)
+-- HUB DE ESTATÍSTICAS - MOBILE FRIENDLY
+-- LocalScript
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
 
 -- GUI
 local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "StatsHub"
 gui.ResetOnSpawn = false
 
 -- BOTÃO +
 local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.fromScale(0.06,0.08)
-openBtn.Position = UDim2.fromScale(0.02,0.4)
+openBtn.Size = UDim2.fromOffset(40,40)
+openBtn.Position = UDim2.new(0,10,0.5,-20)
 openBtn.Text = "+"
+openBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+openBtn.TextColor3 = Color3.new(1,1,1)
 openBtn.TextScaled = true
+openBtn.BorderSizePixel = 0
+openBtn.Visible = true
 
 -- HUB
-local hub = Instance.new("Frame", gui)
-hub.Size = UDim2.fromScale(0.45,0.45)
-hub.Position = UDim2.fromScale(0.28,0.25)
-hub.BackgroundColor3 = Color3.fromRGB(25,25,25)
-hub.Visible = false
-hub.Active = true
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.fromOffset(320,380)
+frame.Position = UDim2.new(0.5,-160,0.5,-190)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.Visible = false
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
 
--- HEADER
-local header = Instance.new("Frame", hub)
-header.Size = UDim2.fromScale(1,0.15)
-header.BackgroundColor3 = Color3.fromRGB(40,40,40)
+-- TOPO
+local top = Instance.new("Frame", frame)
+top.Size = UDim2.new(1,0,0,35)
+top.BackgroundColor3 = Color3.fromRGB(35,35,35)
+top.BorderSizePixel = 0
 
-local title = Instance.new("TextLabel", header)
-title.Size = UDim2.fromScale(0.7,1)
-title.Text = "ESTATÍSTICAS"
-title.TextScaled = true
-title.TextColor3 = Color3.new(1,1,1)
-title.BackgroundTransparency = 1
-
-local close = Instance.new("TextButton", header)
-close.Size = UDim2.fromScale(0.15,1)
-close.Position = UDim2.fromScale(0.85,0)
+-- BOTÕES
+local close = Instance.new("TextButton", top)
 close.Text = "X"
-close.TextScaled = true
+close.Size = UDim2.fromOffset(35,35)
+close.Position = UDim2.new(1,-35,0,0)
+close.BackgroundColor3 = Color3.fromRGB(150,50,50)
+close.TextColor3 = Color3.new(1,1,1)
+close.BorderSizePixel = 0
 
-local minimize = Instance.new("TextButton", header)
-minimize.Size = UDim2.fromScale(0.15,1)
-minimize.Position = UDim2.fromScale(0.7,0)
+local minimize = Instance.new("TextButton", top)
 minimize.Text = "-"
-minimize.TextScaled = true
+minimize.Size = UDim2.fromOffset(35,35)
+minimize.Position = UDim2.new(1,-70,0,0)
+minimize.BackgroundColor3 = Color3.fromRGB(70,70,70)
+minimize.TextColor3 = Color3.new(1,1,1)
+minimize.BorderSizePixel = 0
 
--- INPUT
-local input = Instance.new("TextBox", hub)
-input.Position = UDim2.fromScale(0.05,0.2)
-input.Size = UDim2.fromScale(0.9,0.1)
-input.PlaceholderText = "Digite 2 letras do nick"
-input.BackgroundTransparency = 0.5
-input.TextScaled = true
+-- TEXTBOX NICK
+local box = Instance.new("TextBox", frame)
+box.PlaceholderText = "Nick (2 primeiras letras)"
+box.Size = UDim2.new(1,-20,0,35)
+box.Position = UDim2.new(0,10,0,45)
+box.BackgroundColor3 = Color3.fromRGB(30,30,30)
+box.TextColor3 = Color3.new(1,1,1)
+box.TextTransparency = 0.3
+box.ClearTextOnFocus = false
+box.BorderSizePixel = 0
 
--- INFO
-local info = Instance.new("TextLabel", hub)
-info.Position = UDim2.fromScale(0.05,0.35)
-info.Size = UDim2.fromScale(0.9,0.6)
-info.TextWrapped = true
-info.TextYAlignment = Enum.TextYAlignment.Top
-info.TextXAlignment = Enum.TextXAlignment.Left
-info.TextScaled = true
-info.BackgroundTransparency = 1
-info.TextColor3 = Color3.new(1,1,1)
+-- SCROLL
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Position = UDim2.new(0,10,0,90)
+scroll.Size = UDim2.new(1,-20,1,-100)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.ScrollBarImageTransparency = 0.2
+scroll.BackgroundTransparency = 1
 
--- FUNÇÃO BUSCAR PLAYER
-local function findPlayer(prefix)
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,6)
+
+-- FUNÇÃO DE TEXTO
+local function add(text)
+	local l = Instance.new("TextLabel", scroll)
+	l.Size = UDim2.new(1,-10,0,24)
+	l.BackgroundTransparency = 1
+	l.TextWrapped = true
+	l.TextXAlignment = Left
+	l.TextColor3 = Color3.new(1,1,1)
+	l.Text = text
+	l.Font = Enum.Font.SourceSans
+	l.TextSize = 14
+	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+end
+
+-- BOTÃO COPIAR ID
+local function copyId(id)
+	if setclipboard then
+		setclipboard(tostring(id))
+	end
+end
+
+-- BUSCAR PLAYER
+local function getPlayerByLetters(txt)
+	txt = txt:lower()
 	for _,plr in pairs(Players:GetPlayers()) do
-		if plr ~= player and plr.Name:lower():sub(1,#prefix) == prefix then
+		if plr.Name:lower():sub(1,#txt) == txt then
 			return plr
 		end
 	end
 end
 
--- ATUALIZAR INFO
-RunService.RenderStepped:Connect(function()
-	local txt = input.Text:lower()
-	if #txt < 2 then return end
+-- ATUALIZAR
+local function update(plr)
+	scroll:ClearAllChildren()
+	layout.Parent = scroll
 
-	local target = findPlayer(txt)
-	if not target or not target.Character then
-		info.Text = "Player não encontrado."
-		return
+	if not plr.Character then return end
+	local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+	local root = plr.Character:FindFirstChild("HumanoidRootPart")
+
+	add("Nick: "..plr.Name)
+	add("Display: "..plr.DisplayName)
+	add("UserId: "..plr.UserId.." (copiado)")
+	copyId(plr.UserId)
+
+	add("Conta criada há: "..plr.AccountAge.." dias")
+
+	if hum then
+		add("Vida: "..math.floor(hum.Health).."/"..math.floor(hum.MaxHealth))
+		add("Velocidade: "..hum.WalkSpeed)
+		add("Pulo: "..hum.JumpPower)
 	end
 
-	local hum = target.Character:FindFirstChildOfClass("Humanoid")
-	local root = target.Character:FindFirstChild("HumanoidRootPart")
-	local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if root and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		local dist = (root.Position - player.Character.HumanoidRootPart.Position).Magnitude
+		add("Distância até você: "..math.floor(dist))
+	end
 
-	local dist = (root and myRoot) and math.floor((root.Position - myRoot.Position).Magnitude) or 0
+	add("Amigo seu: "..(player:IsFriendsWith(plr.UserId) and "Sim" or "Não"))
 
-	info.Text =
-		"Nick: "..target.Name..
-		"\nDisplay: "..target.DisplayName..
-		"\nUserId: "..target.UserId..
-		"\nVida: "..(hum and math.floor(hum.Health) or "N/A")..
-		"\nDistância: "..dist..
-		"\nIdade da conta: "..target.AccountAge.." dias"..
-		"\nTempo no server: "..math.floor(target:GetNetworkPing()*1000).." ms"
+	-- Leaderstats
+	if plr:FindFirstChild("leaderstats") then
+		for _,v in pairs(plr.leaderstats:GetChildren()) do
+			add(v.Name..": "..v.Value)
+		end
+	end
+end
+
+-- EVENTOS
+box.FocusLost:Connect(function()
+	if box.Text == "" then return end
+	local plr = getPlayerByLetters(box.Text)
+	if plr then
+		update(plr)
+	end
 end)
 
--- BOTÕES
 openBtn.MouseButton1Click:Connect(function()
-	hub.Visible = true
 	openBtn.Visible = false
+	frame.Visible = true
 end)
 
 close.MouseButton1Click:Connect(function()
@@ -114,6 +163,6 @@ close.MouseButton1Click:Connect(function()
 end)
 
 minimize.MouseButton1Click:Connect(function()
-	hub.Visible = false
+	frame.Visible = false
 	openBtn.Visible = true
 end)
