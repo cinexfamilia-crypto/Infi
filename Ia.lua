@@ -1,168 +1,110 @@
--- HUB DE ESTATÍSTICAS - MOBILE FRIENDLY
--- LocalScript
+-- HUB COM LOADING + TOGGLE
+-- LocalScript | StarterGui
 
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 -- GUI
-local gui = Instance.new("ScreenGui", player.PlayerGui)
-gui.Name = "StatsHub"
+local gui = Instance.new("ScreenGui")
+gui.Name = "BlackLoadingHub"
 gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
--- BOTÃO +
-local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.fromOffset(40,40)
-openBtn.Position = UDim2.new(0,10,0.5,-20)
-openBtn.Text = "+"
-openBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-openBtn.TextColor3 = Color3.new(1,1,1)
-openBtn.TextScaled = true
-openBtn.BorderSizePixel = 0
-openBtn.Visible = true
+-- FUNDO PRETO
+local bg = Instance.new("Frame", gui)
+bg.Size = UDim2.fromScale(1,1)
+bg.BackgroundColor3 = Color3.new(0,0,0)
+bg.BorderSizePixel = 0
+
+-- LOADING TEXTO
+local loadingText = Instance.new("TextLabel", bg)
+loadingText.Size = UDim2.new(0.4,0,0.08,0)
+loadingText.Position = UDim2.new(0.3,0,0.45,0)
+loadingText.BackgroundTransparency = 1
+loadingText.TextColor3 = Color3.new(1,1,1)
+loadingText.Font = Enum.Font.SourceSansBold
+loadingText.TextScaled = true
+loadingText.Text = "Carregando... 0%"
+
+-- LOADING BAR
+local barBack = Instance.new("Frame", bg)
+barBack.Size = UDim2.new(0.5,0,0.03,0)
+barBack.Position = UDim2.new(0.25,0,0.55,0)
+barBack.BackgroundColor3 = Color3.fromRGB(40,40,40)
+barBack.BorderSizePixel = 0
+
+local bar = Instance.new("Frame", barBack)
+bar.Size = UDim2.new(0,0,1,0)
+bar.BackgroundColor3 = Color3.fromRGB(0,170,255)
+bar.BorderSizePixel = 0
+
+-- LOADING (15s até 200%)
+task.spawn(function()
+	for i = 0,200 do
+		bar.Size = UDim2.new(i/200,0,1,0)
+		loadingText.Text = "Carregando... "..i.."%"
+		task.wait(15/200)
+	end
+
+	bg:Destroy()
+end)
 
 -- HUB
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.fromOffset(320,380)
-frame.Position = UDim2.new(0.5,-160,0.5,-190)
-frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-frame.Visible = false
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
+local hub = Instance.new("Frame", gui)
+hub.Size = UDim2.fromOffset(200,120)
+hub.Position = UDim2.new(0.5,-100,0.5,-60)
+hub.BackgroundColor3 = Color3.fromRGB(20,20,20)
+hub.Visible = false
+hub.Active = true
+hub.Draggable = true
+hub.BorderSizePixel = 0
 
--- TOPO
-local top = Instance.new("Frame", frame)
-top.Size = UDim2.new(1,0,0,35)
-top.BackgroundColor3 = Color3.fromRGB(35,35,35)
-top.BorderSizePixel = 0
+-- MOSTRAR HUB APÓS LOADING
+task.delay(15, function()
+	hub.Visible = true
+end)
 
--- BOTÕES
-local close = Instance.new("TextButton", top)
-close.Text = "X"
-close.Size = UDim2.fromOffset(35,35)
-close.Position = UDim2.new(1,-35,0,0)
-close.BackgroundColor3 = Color3.fromRGB(150,50,50)
-close.TextColor3 = Color3.new(1,1,1)
-close.BorderSizePixel = 0
+-- BOTÃO
+local toggle = Instance.new("TextButton", hub)
+toggle.Size = UDim2.new(0.8,0,0.5,0)
+toggle.Position = UDim2.new(0.1,0,0.25,0)
+toggle.Text = "OFF"
+toggle.Font = Enum.Font.SourceSansBold
+toggle.TextScaled = true
+toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
+toggle.TextColor3 = Color3.new(1,1,1)
+toggle.BorderSizePixel = 0
 
-local minimize = Instance.new("TextButton", top)
-minimize.Text = "-"
-minimize.Size = UDim2.fromOffset(35,35)
-minimize.Position = UDim2.new(1,-70,0,0)
-minimize.BackgroundColor3 = Color3.fromRGB(70,70,70)
-minimize.TextColor3 = Color3.new(1,1,1)
-minimize.BorderSizePixel = 0
+-- ESTADO
+local enabled = false
 
--- TEXTBOX NICK
-local box = Instance.new("TextBox", frame)
-box.PlaceholderText = "Nick (2 primeiras letras)"
-box.Size = UDim2.new(1,-20,0,35)
-box.Position = UDim2.new(0,10,0,45)
-box.BackgroundColor3 = Color3.fromRGB(30,30,30)
-box.TextColor3 = Color3.new(1,1,1)
-box.TextTransparency = 0.3
-box.ClearTextOnFocus = false
-box.BorderSizePixel = 0
+toggle.MouseButton1Click:Connect(function()
+	enabled = not enabled
 
--- SCROLL
-local scroll = Instance.new("ScrollingFrame", frame)
-scroll.Position = UDim2.new(0,10,0,90)
-scroll.Size = UDim2.new(1,-20,1,-100)
-scroll.CanvasSize = UDim2.new(0,0,0,0)
-scroll.ScrollBarImageTransparency = 0.2
-scroll.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0,6)
-
--- FUNÇÃO DE TEXTO
-local function add(text)
-	local l = Instance.new("TextLabel", scroll)
-	l.Size = UDim2.new(1,-10,0,24)
-	l.BackgroundTransparency = 1
-	l.TextWrapped = true
-	l.TextXAlignment = Left
-	l.TextColor3 = Color3.new(1,1,1)
-	l.Text = text
-	l.Font = Enum.Font.SourceSans
-	l.TextSize = 14
-	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
-end
-
--- BOTÃO COPIAR ID
-local function copyId(id)
-	if setclipboard then
-		setclipboard(tostring(id))
+	if enabled then
+		toggle.Text = "ON"
+		toggle.BackgroundColor3 = Color3.fromRGB(0,170,0)
+		-- aqui você liga o que quiser (local)
+	else
+		toggle.Text = "OFF"
+		toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
+		-- aqui você desliga
 	end
-end
+end)
 
--- BUSCAR PLAYER
-local function getPlayerByLetters(txt)
-	txt = txt:lower()
-	for _,plr in pairs(Players:GetPlayers()) do
-		if plr.Name:lower():sub(1,#txt) == txt then
-			return plr
+-- ANTI-KICK BÁSICO (local)
+pcall(function()
+	local mt = getrawmetatable(game)
+	setreadonly(mt,false)
+
+	local old = mt.__namecall
+	mt.__namecall = newcclosure(function(self,...)
+		local method = getnamecallmethod()
+		if method == "Kick" then
+			return
 		end
-	end
-end
+		return old(self,...)
+	end)
 
--- ATUALIZAR
-local function update(plr)
-	scroll:ClearAllChildren()
-	layout.Parent = scroll
-
-	if not plr.Character then return end
-	local hum = plr.Character:FindFirstChildOfClass("Humanoid")
-	local root = plr.Character:FindFirstChild("HumanoidRootPart")
-
-	add("Nick: "..plr.Name)
-	add("Display: "..plr.DisplayName)
-	add("UserId: "..plr.UserId.." (copiado)")
-	copyId(plr.UserId)
-
-	add("Conta criada há: "..plr.AccountAge.." dias")
-
-	if hum then
-		add("Vida: "..math.floor(hum.Health).."/"..math.floor(hum.MaxHealth))
-		add("Velocidade: "..hum.WalkSpeed)
-		add("Pulo: "..hum.JumpPower)
-	end
-
-	if root and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		local dist = (root.Position - player.Character.HumanoidRootPart.Position).Magnitude
-		add("Distância até você: "..math.floor(dist))
-	end
-
-	add("Amigo seu: "..(player:IsFriendsWith(plr.UserId) and "Sim" or "Não"))
-
-	-- Leaderstats
-	if plr:FindFirstChild("leaderstats") then
-		for _,v in pairs(plr.leaderstats:GetChildren()) do
-			add(v.Name..": "..v.Value)
-		end
-	end
-end
-
--- EVENTOS
-box.FocusLost:Connect(function()
-	if box.Text == "" then return end
-	local plr = getPlayerByLetters(box.Text)
-	if plr then
-		update(plr)
-	end
-end)
-
-openBtn.MouseButton1Click:Connect(function()
-	openBtn.Visible = false
-	frame.Visible = true
-end)
-
-close.MouseButton1Click:Connect(function()
-	gui:Destroy()
-end)
-
-minimize.MouseButton1Click:Connect(function()
-	frame.Visible = false
-	openBtn.Visible = true
+	setreadonly(mt,true)
 end)
