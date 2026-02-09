@@ -1,110 +1,149 @@
--- HUB COM LOADING + TOGGLE
--- LocalScript | StarterGui
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+-- ========= FUNÇÃO DE DRAG MOBILE =========
+local function enableDrag(frame)
+    local dragging = false
+    local dragStart, startPos
 
--- GUI
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    frame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- ========= GUI BASE =========
 local gui = Instance.new("ScreenGui")
-gui.Name = "BlackLoadingHub"
+gui.Name = "FantasmaHub"
 gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+gui.Parent = game.CoreGui
 
--- FUNDO PRETO
-local bg = Instance.new("Frame", gui)
-bg.Size = UDim2.fromScale(1,1)
-bg.BackgroundColor3 = Color3.new(0,0,0)
-bg.BorderSizePixel = 0
+local function criarAba(titulo, pos)
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.fromOffset(220,120)
+    frame.Position = pos
+    frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    frame.BorderSizePixel = 0
+    frame.Active = true
 
--- LOADING TEXTO
-local loadingText = Instance.new("TextLabel", bg)
-loadingText.Size = UDim2.new(0.4,0,0.08,0)
-loadingText.Position = UDim2.new(0.3,0,0.45,0)
-loadingText.BackgroundTransparency = 1
-loadingText.TextColor3 = Color3.new(1,1,1)
-loadingText.Font = Enum.Font.SourceSansBold
-loadingText.TextScaled = true
-loadingText.Text = "Carregando... 0%"
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1,0,0,30)
+    title.BackgroundTransparency = 1
+    title.Text = titulo
+    title.TextColor3 = Color3.fromRGB(200,200,200)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 14
 
--- LOADING BAR
-local barBack = Instance.new("Frame", bg)
-barBack.Size = UDim2.new(0.5,0,0.03,0)
-barBack.Position = UDim2.new(0.25,0,0.55,0)
-barBack.BackgroundColor3 = Color3.fromRGB(40,40,40)
-barBack.BorderSizePixel = 0
+    enableDrag(frame)
+    return frame
+end
 
-local bar = Instance.new("Frame", barBack)
-bar.Size = UDim2.new(0,0,1,0)
-bar.BackgroundColor3 = Color3.fromRGB(0,170,255)
-bar.BorderSizePixel = 0
+-- ========= WALK SPEED =========
+local wsValue = 16
 
--- LOADING (15s até 200%)
-task.spawn(function()
-	for i = 0,200 do
-		bar.Size = UDim2.new(i/200,0,1,0)
-		loadingText.Text = "Carregando... "..i.."%"
-		task.wait(15/200)
-	end
+local wsFrame = criarAba("WalkSpeed", UDim2.fromScale(0.1,0.25))
 
-	bg:Destroy()
+local wsBox = Instance.new("TextBox", wsFrame)
+wsBox.Size = UDim2.fromOffset(180,40)
+wsBox.Position = UDim2.fromOffset(20,50)
+wsBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
+wsBox.TextColor3 = Color3.new(1,1,1)
+wsBox.PlaceholderText = "fantasma"
+wsBox.ClearTextOnFocus = false
+wsBox.Font = Enum.Font.Gotham
+wsBox.TextSize = 14
+
+wsBox.FocusLost:Connect(function()
+    local v = tonumber(wsBox.Text)
+    if v then wsValue = v end
 end)
 
--- HUB
-local hub = Instance.new("Frame", gui)
-hub.Size = UDim2.fromOffset(200,120)
-hub.Position = UDim2.new(0.5,-100,0.5,-60)
-hub.BackgroundColor3 = Color3.fromRGB(20,20,20)
-hub.Visible = false
-hub.Active = true
-hub.Draggable = true
-hub.BorderSizePixel = 0
+-- ========= SUPER JUMP =========
+local jumpValue = 50
 
--- MOSTRAR HUB APÓS LOADING
-task.delay(15, function()
-	hub.Visible = true
+local jumpFrame = criarAba("Super Jump", UDim2.fromScale(0.4,0.25))
+
+local jumpBox = Instance.new("TextBox", jumpFrame)
+jumpBox.Size = UDim2.fromOffset(180,40)
+jumpBox.Position = UDim2.fromOffset(20,50)
+jumpBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
+jumpBox.TextColor3 = Color3.new(1,1,1)
+jumpBox.PlaceholderText = "fantasma"
+jumpBox.ClearTextOnFocus = false
+jumpBox.Font = Enum.Font.Gotham
+jumpBox.TextSize = 14
+
+jumpBox.FocusLost:Connect(function()
+    local v = tonumber(jumpBox.Text)
+    if v then jumpValue = v end
 end)
 
--- BOTÃO
-local toggle = Instance.new("TextButton", hub)
-toggle.Size = UDim2.new(0.8,0,0.5,0)
-toggle.Position = UDim2.new(0.1,0,0.25,0)
-toggle.Text = "OFF"
-toggle.Font = Enum.Font.SourceSansBold
-toggle.TextScaled = true
-toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
-toggle.TextColor3 = Color3.new(1,1,1)
-toggle.BorderSizePixel = 0
+-- ========= NOCLIP =========
+local noclip = false
 
--- ESTADO
-local enabled = false
+local noclipFrame = criarAba("Noclip", UDim2.fromScale(0.7,0.25))
 
-toggle.MouseButton1Click:Connect(function()
-	enabled = not enabled
+local noclipBtn = Instance.new("TextButton", noclipFrame)
+noclipBtn.Size = UDim2.fromOffset(180,40)
+noclipBtn.Position = UDim2.fromOffset(20,50)
+noclipBtn.Text = "OFF"
+noclipBtn.Font = Enum.Font.GothamBold
+noclipBtn.TextSize = 16
+noclipBtn.TextColor3 = Color3.new(1,1,1)
+noclipBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
 
-	if enabled then
-		toggle.Text = "ON"
-		toggle.BackgroundColor3 = Color3.fromRGB(0,170,0)
-		-- aqui você liga o que quiser (local)
-	else
-		toggle.Text = "OFF"
-		toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
-		-- aqui você desliga
-	end
+noclipBtn.MouseButton1Click:Connect(function()
+    noclip = not noclip
+    if noclip then
+        noclipBtn.Text = "ON"
+        noclipBtn.BackgroundColor3 = Color3.fromRGB(0,150,0)
+    else
+        noclipBtn.Text = "OFF"
+        noclipBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    end
 end)
 
--- ANTI-KICK BÁSICO (local)
-pcall(function()
-	local mt = getrawmetatable(game)
-	setreadonly(mt,false)
+-- ========= LOOP ANTI-RESET =========
+RunService.RenderStepped:Connect(function()
+    local char = player.Character
+    if not char then return end
 
-	local old = mt.__namecall
-	mt.__namecall = newcclosure(function(self,...)
-		local method = getnamecallmethod()
-		if method == "Kick" then
-			return
-		end
-		return old(self,...)
-	end)
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = wsValue
+        hum.JumpPower = jumpValue
+    end
 
-	setreadonly(mt,true)
+    if noclip then
+        for _,v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+    end
 end)
